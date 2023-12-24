@@ -15,7 +15,7 @@ from astropy.time import Time
 #     )
 # )
 
-connector.save("coma-connector")
+# connector.save("coma-connector")
 
 @task(log_prints=True)
 def file_checker(basepath: str) -> list:
