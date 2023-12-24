@@ -65,8 +65,7 @@ services:
   ### Prefect CLI
   cli:
     image: prefecthq/prefect:2.14.11-python3.11
-    entrypoint: "bash"
-    command: tail -F anything
+    entrypoint: ["tail", "-F", "anything"]
     working_dir: "/root/flows"
     volumes:
       - "./flows:/root/flows"
