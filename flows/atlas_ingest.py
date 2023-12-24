@@ -9,13 +9,13 @@ from astropy.time import Time
 #         driver=SyncDriver.POSTGRESQL_PSYCOPG2,
 #         username="coma",
 #         password="ChangeMePlease",
-#         host="localhost",
+#         host="coma.ifa.hawaii.edu",
 #         port=5433,
 #         database="coma",
 #     )
 # )
-#
-# connector.save("coma-connector")
+
+connector.save("coma-connector")
 
 @task(log_prints=True)
 def file_checker(basepath: str) -> list:
@@ -34,13 +34,13 @@ def file_checker(basepath: str) -> list:
 
 @task(log_prints=True)
 def describe_fits(file: str) -> dict:
-    api = "http://localhost:8001/api/v2/sci/fits/describe"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/describe"
     json = { "fits_file": file }
     response = httpx.post(api, json=json,verify=False).json()
     job_id = response["id"]
     time.sleep(2)
     
-    japi = f"http://localhost:8001/api/v2/sci/fits/describe/{job_id}"
+    japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/describe/{job_id}"
     resp = httpx.get(japi, verify=False).json()
     data = resp["result"]["PARAMETERS"]
     print("Describe result")
@@ -68,12 +68,12 @@ def identify_object(description: dict) -> str:
             "ra": ra,
             "dec": dec}
 
-    api = "http://localhost:8001/api/v2/sci/fits/identify"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/identify"
     response = httpx.post(api, json=json, verify=False).json()
     id = response['id']
     time.sleep(30)
 
-    japi = f"http://localhost:8001/api/v2/fits/identify/{id}"
+    japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/fits/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
     return resp['result']
 
@@ -142,12 +142,12 @@ def get_pds4_lid(block_name: str, identity: str, ) -> list:
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
-    api = "http://localhost:8001/api/v2/sci/sci/fits/calibrate"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/sci/fits/calibrate"
     json = { "fist_file": file }
     response = httpx.post(api, json=json,verify=False).json()
     job_id = response["id"]
     
-    japi = "http://localhost:8001/api/v2/sci/fits/calibrate/{job_id}".format(job_id=job_id)
+    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/calibrate/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     time.sleep(3)
     data = resp["result"]["PARAMETERS"]
@@ -155,7 +155,7 @@ def calibrate_fits(file: str) -> dict:
 
 @task(log_prints=True)
 def photometry_fits(file: str) -> dict:
-    api = "http://localhost:8001/api/v2/sci/fits/photometry"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry"
     apertures = [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
     # else:
     #     apertures = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
@@ -173,7 +173,7 @@ def photometry_fits(file: str) -> dict:
 
 @task(log_prints=True)
 def orbit_photometry(object:str)-> str:
-    api = "http://localhost:8001/api/v2/sci/fits/orbit"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/orbit"
     print(object)
     return object 
 
@@ -190,9 +190,9 @@ def move_to_datalake(scratch: str,data: dict):
 
 @task(log_prints=True)
 def database_inserts(image: dict, calibration: dict, photometry:dict, orbit: dict): 
-    image_api = "http://localhost:8001/api/v2/images"
-    calibration_api = "http://localhost:8001/api/v2/calibrations"
-    photometry_api = "http://localhost:8001/api/v2/photometries"
+    image_api = "http://coma.ifa.hawaii.edu:8001/api/v2/images"
+    calibration_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
+    photometry_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
     pass
     # image_resp = httpx.post(image_api, json=json, verify=False).json()
     # 
