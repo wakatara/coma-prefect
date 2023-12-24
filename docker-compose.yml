@@ -65,7 +65,6 @@ services:
   ### Prefect CLI
   cli:
     image: prefecthq/prefect:2.14.11-python3.11
-    entrypoint: ["tail", "-F", "anything"]
     working_dir: "/root/flows"
     volumes:
       - "./flows:/root/flows"
@@ -76,6 +75,7 @@ services:
       #     - PREFECT_API_KEY=YOUR_API_KEY
       - EXTRA_PIP_PACKAGES=astropy prefect-sqlalchemy datetime httpx
     # profiles: ["cli"]
+    command: tail -f /dev/null
 
 volumes:
   prefect:
