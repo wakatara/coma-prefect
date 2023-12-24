@@ -1,7 +1,7 @@
 import os, glob, datetime, time, shutil, httpx
 from prefect import flow, task
 from prefect.states import Failed
-from prefect-sqlalchemy import SqlAlchemyConnector, ConnectionComponents, SyncDriver
+from prefect_sqlalchemy import SqlAlchemyConnector, ConnectionComponents, SyncDriver
 from astropy.time import Time
 
 # connector = SqlAlchemyConnector(
