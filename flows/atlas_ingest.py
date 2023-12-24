@@ -42,7 +42,7 @@ def describe_fits(file: str) -> dict:
     
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/describe/{job_id}"
     resp = httpx.get(japi, verify=False).json()
-    data = resp["result"]["PARAMETERS"]
+    data = resp["result"]
     print("Describe result")
     print(data)
     return data
