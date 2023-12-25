@@ -44,7 +44,7 @@ services:
       # - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@database:5432/prefect
       - PREFECT_API_DATABASE_CONNECTION_URL=sqlite+aiosqlite:////root/.prefect/prefect.db
       # Uncomment the following line if you want to use the 'S3 Bucket' storage block instead of the older 'S3' storage
-      - EXTRA_PIP_PACKAGES=astropy prefect-sqlalchemy psycopg2 datetime httpx
+      - EXTRA_PIP_PACKAGES=astropy prefect-sqlalchemy psycopg2-binary datetime httpx
     ports:
       - 4200:4200
     # depends_on:
@@ -73,7 +73,7 @@ services:
       - PREFECT_API_URL=http://server:4200/api
       #       Use PREFECT_API_KEY to use the CLI to interact with Prefect Cloud
       #     - PREFECT_API_KEY=YOUR_API_KEY
-      - EXTRA_PIP_PACKAGES=astropy prefect-sqlalchemy psycopg2 datetime httpx
+      - EXTRA_PIP_PACKAGES=astropy prefect-sqlalchemy psycopg2-binary datetime httpx
     # profiles: ["cli"]
     command: tail -f /dev/null
 
