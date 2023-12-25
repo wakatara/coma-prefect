@@ -138,7 +138,7 @@ def get_pds4_lid(block_name: str, identity: str, ) -> list:
     with SqlAlchemyConnector.load(block_name) as connector:
         sql = f"select pds4_lid from objects where name = '{identity}'"
         row = connector.fetch_one(sql)
-        print(row)
+        print(f"Result returned by SQL was {row}")
         return row
 
 @task(log_prints=True)
