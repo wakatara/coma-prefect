@@ -235,7 +235,7 @@ def sci_backend_processing(file: str):
     identity = identify_object(description)
     data = flight_checks(description, scratch)
     pds4_lid = get_pds4_lid("coma-connector", identity)
-    if len(pds4_lid) == 0:
+    if pds4_lid == None:
         dead_letter(scratch)
     calibration = calibrate_fits(scratch)
     photometry = photometry_fits(scratch)
