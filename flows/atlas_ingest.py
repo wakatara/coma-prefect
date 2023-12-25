@@ -136,7 +136,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
 @task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str, ) -> list:
     with SqlAlchemyConnector.load(block_name) as connector:
-        sql = f"select pds4_lid from objects where name = {identity}"
+        sql = f"select pds4_lid from objects where name = '{identity}'"
         row = connector.fetch_one(sql)
         print(row)
         return row
