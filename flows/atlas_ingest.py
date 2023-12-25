@@ -127,7 +127,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         print("No filter present - setting to no_filter.") 
         data["FILTER"] = "no_filter"
     
-    if data["INSTRUMENT"] == "no_instrument" or data["OBSERVATORY"] == "no_observatory" or data["MJD_MID"] == 0.0 or data["EXPTIME"] == 0.0 or data["FILTER"] == "no_filter":
+    if data["INSTRUMENT"] == "no_instrument" or data["OBSERVATORY"] == "no_observatory" or data["MJD-MID"] == 0.0 or data["EXPTIME"] == 0.0 or data["FILTER"] == "no_filter":
         dead_letter(scratch_filepath)
         return Failed()
     else: 
