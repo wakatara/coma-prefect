@@ -75,6 +75,7 @@ def identify_object(description: dict) -> str:
 
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/comet/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
+    print(f"The result of the comet ID is { resp['result'] }")
     return resp['result']
 
 @task(log_prints=True)
