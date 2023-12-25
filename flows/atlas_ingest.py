@@ -68,12 +68,12 @@ def identify_object(description: dict) -> str:
             "ra": ra,
             "dec": dec}
 
-    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/identify"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify"
     response = httpx.post(api, json=json, verify=False).json()
     id = response['id']
     time.sleep(30)
 
-    japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/fits/identify/{id}"
+    japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/comet/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
     return resp['result']
 
