@@ -312,7 +312,8 @@ def sci_backend_processing(file: str):
     # identity = identify_object(description)
     filepath = os.path.normpath(file).split(os.path.sep)
     if filepath[-4] == "atlas":
-        identity = packed_provisional_to_identity(filepath[-2]) 
+        identity = packed_provisional_to_identity(filepath[-2])
+        description['OBJECT'] = identity
         data = flight_checks(description, scratch)
         pds4_lid = get_pds4_lid("coma-connector", identity)
         if pds4_lid == None:
@@ -320,7 +321,7 @@ def sci_backend_processing(file: str):
         calibration = calibrate_fits(scratch)
         photometry_type = "APERTURE"
         photometry = photometry_fits(scratch, identity, photometry_type)
-        orbit = object_orbit(data["OBJECT"])
+        orbit = object_orbit(identity)
         # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
         iso_utc_mid = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
