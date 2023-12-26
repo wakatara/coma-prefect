@@ -185,12 +185,12 @@ def object_orbit(object: str)-> dict:
         "method": "jpl-horizons",
         "object": object
     }
-   
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
     time.sleep(5)
     japi = "http://coma.ifa.hawaii.edu:8000/api/v2/sci/fits/orbit/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
+    print(resp)
     orbit = resp["result"]
     print(orbit)
     return orbit
