@@ -3,7 +3,7 @@ from prefect import flow, task
 from prefect.states import Failed
 from prefect_sqlalchemy import SqlAlchemyConnector
 from astropy.time import Time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 # from prefect_sqlalchemy import ConnectionComponents, SyncDriver
 # connector = SqlAlchemyConnector(
@@ -27,7 +27,7 @@ def file_checker(basepath: str) -> list:
     new_files=[]
     for path in glob.glob(full_path, recursive=True):
         if os.path.isfile(path):
-            mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
+            mod_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
             print("Found File {path} last modified: {mod_time}".format(path=path, mod_time=mod_time))
             new_files.append(path)   
     print("Files found:")
@@ -110,8 +110,8 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["MJD-MID"] = 0.0   
 
     if data["MJD-MID"] == 0.0:
-        data["ISO-DATE-MID"] = datetime.datetime(1, 1, 1)
-        data["ISO-DATE-MID"] = datetime.datetime(1,1,1)
+        data["ISO-DATE-MID"] = datetime(1, 1, 1)
+        data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
         data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
@@ -217,11 +217,11 @@ def object_ephemerides(description: dict, orbit: dict) -> dict:
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
     time.sleep(5)
-    japi = "http://coma.ifa.hawaii.edu:8000/api/v2/sci/fits/orbit/{job_id}".format(job_id=job_id)
+    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    orbit = resp["result"]
-    print(orbit)
-    return orbit
+    ephemerides = resp["result"]
+    print(ephemerides)
+    return ephemerides
 
 
 @task(log_prints=True)
@@ -306,8 +306,8 @@ def sci_backend_processing(file: str):
     scratch = copy_to_scratch(file)
     description = describe_fits(file)
     time_from_mjd = Time(description["MJD-MID"], format='mjd', scale='utc')
-    description["ISO-UTC-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
-    description["ISO-UTC-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
+    description["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
+    description["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
     # identity = identify_object(description)
     filepath = os.path.normpath(file).split(os.path.sep)
@@ -322,7 +322,9 @@ def sci_backend_processing(file: str):
         photometry = photometry_fits(scratch, identity, photometry_type)
         orbit = object_orbit(data["OBJECT"])
         # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
-        description["ISO-UTC-END"] = (description["ISO-UTC-MID"]).string() + timedelta(minutes=1)
+        iso_utc_mid = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
+
+        iso_utc_end = iso_utc_mid + timedelta(minutes=1)
         ephemerides = object_ephemerides(description, orbit)
         if (calibration == None or photometry == None or orbit == None or
                 ephemerides == None):
