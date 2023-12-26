@@ -3,6 +3,7 @@ from prefect import flow, task
 from prefect.states import Failed
 from prefect_sqlalchemy import SqlAlchemyConnector
 from astropy.time import Time
+from datetime import timedelta, strptime
 
 # from prefect_sqlalchemy import ConnectionComponents, SyncDriver
 # connector = SqlAlchemyConnector(
@@ -194,11 +195,22 @@ def object_orbit(object: str)-> dict:
     return orbit
 
 @task(log_prints=True)
-def object_ephemerides(orbit: dict, obscode: str) -> dict:
-    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/orbit"
+def object_ephemerides(description: dict, orbit: dict) -> dict:
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides"
     json = {
-        "method": "jpl-horizons",
-        "object": object
+        "id": description['OBJECT'],
+        "epoch_mjd": orbit["EPOCH-MJD"],
+        "time_peri_mjd": orbit["TIME-PERI-MJD"],
+        "orbinc": orbit["ORBINC"],
+        "anode": orbit["ANODE"],
+        "perihelion": orbit["PERIHELION"],
+        "arg_perihelion": orbit["ARG-PERIHELION"],
+        "eccentricity": orbit["ECCENTRICITY"],
+        "object": description['object'],
+        "dt_minutes": 2,
+        "obscode": description["OBSCODE"],
+        "iso_utc_mid": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
+        "iso_utc_end":description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
     }
    
     response = httpx.post(api, json=json, verify=False).json()
@@ -304,7 +316,9 @@ def sci_backend_processing(file: str):
         photometry_type = "APERTURE"
         photometry = photometry_fits(scratch, photometry_type)
         orbit = object_orbit(data["OBJECT"])
-        ephemerides = object_ephemerides(orbit, description["OBSCODE"])
+        # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
+        description["ISO-UTC-END"] = description["ISO-UTC-MID"] + timedelta(minutes=1)
+        ephemerides = object_ephemerides(description, orbit)
         if (calibration == None or photometry == None or orbit == None or
                 ephemerides == None):
             dead_letter(scratch)
