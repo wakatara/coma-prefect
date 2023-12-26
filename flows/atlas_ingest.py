@@ -305,6 +305,10 @@ def atlas_ingest():
 def sci_backend_processing(file: str):
     scratch = copy_to_scratch(file)
     description = describe_fits(file)
+    time_from_mjd = Time(description["MJD-MID"], format='mjd', scale='utc')
+    description["ISO-UTC-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
+    description["ISO-UTC-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
+
     # identity = identify_object(description)
     filepath = os.path.normpath(file).split(os.path.sep)
     if filepath[-4] == "atlas":
