@@ -72,7 +72,7 @@ def identify_object(description: dict) -> str:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify"
     response = httpx.post(api, json=json, verify=False).json()
     id = response['id']
-    time.sleep(30)
+    time.sleep(90)
 
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
@@ -137,9 +137,9 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
 @task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str, ) -> list:
     with SqlAlchemyConnector.load(block_name) as connector:
-        rows = connector.fetch_many("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
-        print(f"Result returned by SQL was {rows}")
-        return rows
+        row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
+        print(f"Result returned by SQL was {row}")
+        return row
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
