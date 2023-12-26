@@ -207,7 +207,7 @@ def object_ephemerides(description: dict, orbit: dict) -> dict:
         "perihelion": orbit["PERIHELION"],
         "arg_perihelion": orbit["ARG-PERIHELION"],
         "eccentricity": orbit["ECCENTRICITY"],
-        "object": description['object'],
+        "object": description['OBJECT'],
         "dt_minutes": 2,
         "obscode": description["OBSCODE"],
         "iso_utc_mid": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
