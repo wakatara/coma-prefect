@@ -152,6 +152,7 @@ def calibrate_fits(file: str) -> dict:
     time.sleep(5)
     resp = httpx.get(japi, verify=False).json()
     data = resp["result"]
+    print(f"Calibrate result on file is {data}")
     return data
 
 @task(log_prints=True)
@@ -167,9 +168,11 @@ def photometry_fits(file: str) -> dict:
     }
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
-    id = photom_resp["id"]
+    job_id = photom_resp["id"]
     time.sleep(15)
-    photometry = httpx.get(f"api/{id}", verify=False).json()
+    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry/{job_id}".format(job_id=job_id)
+    photometry = httpx.get(japi, verify=False).json()
+    print(f"Photometry result is { photometry }")
     return photometry
 
 @task(log_prints=True)
@@ -177,6 +180,9 @@ def orbit_photometry(object:str)-> str:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/orbit"
     print(object)
     return object 
+
+
+
 
 @task(log_prints=True)
 def move_to_datalake(scratch: str,data: dict):
