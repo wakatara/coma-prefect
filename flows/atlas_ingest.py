@@ -213,9 +213,11 @@ def object_ephemerides(description: dict, orbit: dict) -> dict:
         "iso_utc_mid": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
         "iso_utc_end":description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
     }
-   
+    print("This is the eph json:")
+    print(json)
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
+    print(f"The returned job for eph is {job_id}")
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
