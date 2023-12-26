@@ -196,19 +196,10 @@ def object_orbit(object: str)-> dict:
     return orbit
 
 @task(log_prints=True)
-def object_ephemerides(description: dict, orbit: dict) -> dict:
+def object_ephemerides(description: dict) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides"
     json = {
-        # "id": description['OBJECT'],
-        # "epoch_mjd": orbit["EPOCH-MJD"],
-        # "time_peri_mjd": orbit["TIME-PERI-MJD"],
-        # "orbinc": orbit["ORBINC"],
-        # "anode": orbit["ANODE"],
-        # "perihelion": orbit["PERIHELION"],
-        # "arg_perihelion": orbit["ARG-PERIHELION"],
-        # "eccentricity": orbit["ECCENTRICITY"],
         "object": description['OBJECT'],
-        "method": "jpl-horizons",
         "dt_minutes": 2,
         "obscode": description["OBSCODE"],
         "iso_utc_mid": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
