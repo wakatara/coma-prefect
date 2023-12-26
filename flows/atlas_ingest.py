@@ -176,10 +176,38 @@ def photometry_fits(file: str) -> dict:
     return photometry
 
 @task(log_prints=True)
-def orbit_photometry(object:str)-> str:
-    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/orbit"
-    print(object)
-    return object 
+def object_orbit(object: str)-> dict:
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/orbit"
+    json = {
+        "method": "jpl-horizons",
+        "object": object
+    }
+   
+    response = httpx.post(api, json=json, verify=False).json()
+    job_id = response['id']
+    time.sleep(5)
+    japi = "http://coma.ifa.hawaii.edu:8000/api/v2/sci/fits/orbit/{job_id}".format(job_id=job_id)
+    resp = httpx.get(japi, verify=False).json()
+    orbit = resp["result"]
+    print(orbit)
+    return orbit
+
+@task(log_prints=True)
+def object_ephemerides(orbit: dict, obscode: str) -> dict:
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/orbit"
+    json = {
+        "method": "jpl-horizons",
+        "object": object
+    }
+   
+    response = httpx.post(api, json=json, verify=False).json()
+    job_id = response['id']
+    time.sleep(5)
+    japi = "http://coma.ifa.hawaii.edu:8000/api/v2/sci/fits/orbit/{job_id}".format(job_id=job_id)
+    resp = httpx.get(japi, verify=False).json()
+    orbit = resp["result"]
+    print(orbit)
+    return orbit
 
 
 
@@ -275,8 +303,10 @@ def sci_backend_processing(file: str):
             dead_letter(scratch)
         calibration = calibrate_fits(scratch)
         photometry = photometry_fits(scratch)
-        orbit = orbit_photometry(data["OBJECT"])
-        if (calibration == None or photometry == None or orbit == None):
+        orbit = object_orbit(data["OBJECT"])
+        ephemerides = object_ephemerides(orbit, description["OBSCODE"])
+        if (calibration == None or photometry == None or orbit == None or
+                ephemerides == None):
             dead_letter(scratch)
         database_inserts(data, calibration, photometry, orbit)
         move_to_datalake(scratch, data)
