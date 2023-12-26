@@ -216,7 +216,7 @@ def object_ephemerides(description: dict, orbit: dict) -> dict:
    
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
-    time.sleep(5)
+    time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     ephemerides = resp["result"]
