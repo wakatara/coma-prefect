@@ -72,7 +72,7 @@ def identify_object(description: dict) -> str:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify"
     response = httpx.post(api, json=json, verify=False).json()
     id = response['id']
-    time.sleep(90)
+    time.sleep(75)
 
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
@@ -135,7 +135,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         return data
 
 @task(log_prints=True)
-def get_pds4_lid(block_name: str, identity: str, ) -> list:
+def get_pds4_lid(block_name: str, identity: str, ) -> str:
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
         print(f"Result returned by SQL was {row}")
@@ -219,6 +219,33 @@ def database_inserts(image: dict, calibration: dict, photometry:dict, orbit: dic
     # 
     # photometry_resp = httpx.post(photometry_api, json=json, verify=False).json()
 
+@task(log_prints=True)
+def packed_provisional_to_identity(packed_name: str) -> str:
+    year_code = {'I': 1800, 'J': 1900, 'K': 2000}
+    try:
+        # check for numbered periodic comet or packed format
+        if packed_name[0].isdigit():
+            iau_comet_name = packed_name
+        else:
+            # Split packed provisional into components
+            comet_type = packed_name[0]
+            base_year = year_code[packed_name[1]]
+            year = int(packed_name[2:4])
+            halfmonth = packed_name[4]
+            seq = int(packed_name[5:7])
+            fragment = packed_name[7]
+
+            # Calculate the IAU year
+            iau_year = base_year + year
+            
+            # Format IAU comet name
+            iau_comet_name = f"{comet_type}/{iau_year} {halfmonth}{seq}"
+            if fragment != '0':
+                iau_comet_name = iau_comet_name + '-' + fragment
+        return iau_comet_name
+    except ValueError:
+        # Handle invalid input
+        return "Invalid input format"
 
 @flow(log_prints=True)
 def atlas_ingest():
@@ -232,18 +259,21 @@ def atlas_ingest():
 def sci_backend_processing(file: str):
     scratch = copy_to_scratch(file)
     description = describe_fits(file)
-    identity = identify_object(description)
-    data = flight_checks(description, scratch)
-    pds4_lid = get_pds4_lid("coma-connector", identity)
-    if pds4_lid == None:
-        dead_letter(scratch)
-    calibration = calibrate_fits(scratch)
-    photometry = photometry_fits(scratch)
-    orbit = orbit_photometry(data["OBJECT"])
-    if (calibration == None or photometry == None or orbit == None):
-        dead_letter(scratch)
-    database_inserts(data, calibration, photometry, orbit)
-    move_to_datalake(scratch, data)
+    # identity = identify_object(description)
+    filepath = os.path.normpath(file).split(os.path.sep)
+    if filepath[-4] == "atlas":
+        identity = packed_provisional_to_identity(filepath[-2]) 
+        data = flight_checks(description, scratch)
+        pds4_lid = get_pds4_lid("coma-connector", identity)
+        if pds4_lid == None:
+            dead_letter(scratch)
+        calibration = calibrate_fits(scratch)
+        photometry = photometry_fits(scratch)
+        orbit = orbit_photometry(data["OBJECT"])
+        if (calibration == None or photometry == None or orbit == None):
+            dead_letter(scratch)
+        database_inserts(data, calibration, photometry, orbit)
+        move_to_datalake(scratch, data)
 
 @flow(log_prints=True)
 def dead_letter(file:str):
