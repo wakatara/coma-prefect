@@ -157,14 +157,15 @@ def calibrate_fits(file: str) -> dict:
     return data
 
 @task(log_prints=True)
-def photometry_fits(file: str, phot_type: str) -> dict:
+def photometry_fits(file: str, object: str, phot_type: str) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry"
     apertures = [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
     # else:
     #     apertures = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
 
     json = { 
-        "fits_file": file, 
+        "fits_file": file,
+        "object": object, 
         "apertures": apertures,
         "photometry_type": phot_type,
     }
@@ -314,7 +315,7 @@ def sci_backend_processing(file: str):
             dead_letter(scratch)
         calibration = calibrate_fits(scratch)
         photometry_type = "APERTURE"
-        photometry = photometry_fits(scratch, photometry_type)
+        photometry = photometry_fits(scratch, identity, photometry_type)
         orbit = object_orbit(data["OBJECT"])
         # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
         description["ISO-UTC-END"] = description["ISO-UTC-MID"] + timedelta(minutes=1)
