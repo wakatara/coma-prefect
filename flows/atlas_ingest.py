@@ -191,7 +191,7 @@ def object_orbit(object: str)-> dict:
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/orbit/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     print(resp)
-    orbit = resp["result"]
+    orbit = resp["result"]["ORBIT"]
     print(orbit)
     return orbit
 
