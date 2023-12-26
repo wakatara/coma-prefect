@@ -1,9 +1,10 @@
 import os, glob, datetime, time, shutil, httpx
 from prefect import flow, task
 from prefect.states import Failed
-from prefect_sqlalchemy import SqlAlchemyConnector, ConnectionComponents, SyncDriver
+from prefect_sqlalchemy import SqlAlchemyConnector
 from astropy.time import Time
 
+# from prefect_sqlalchemy import ConnectionComponents, SyncDriver
 # connector = SqlAlchemyConnector(
 #     connection_info=ConnectionComponents(
 #         driver=SyncDriver.POSTGRESQL_PSYCOPG2,
@@ -136,10 +137,9 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
 @task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str, ) -> list:
     with SqlAlchemyConnector.load(block_name) as connector:
-        row = connector.fetch_one("select pds4_lid from objects where name = :name", 
-                                  parameters={"name": identity})
-        print(f"Result returned by SQL was {row}")
-        return row
+        rows = connector.fetch_many("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
+        print(f"Result returned by SQL was {rows}")
+        return rows
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
