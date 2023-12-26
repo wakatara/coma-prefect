@@ -143,15 +143,15 @@ def get_pds4_lid(block_name: str, identity: str, ) -> str:
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
-    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/sci/fits/calibrate"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/calibrate"
     json = { "fist_file": file }
     response = httpx.post(api, json=json,verify=False).json()
     job_id = response["id"]
     
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/calibrate/{job_id}".format(job_id=job_id)
+    time.sleep(5)
     resp = httpx.get(japi, verify=False).json()
-    time.sleep(3)
-    data = resp["result"]["PARAMETERS"]
+    data = resp["result"]
     return data
 
 @task(log_prints=True)
