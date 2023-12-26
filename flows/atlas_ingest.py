@@ -3,7 +3,7 @@ from prefect import flow, task
 from prefect.states import Failed
 from prefect_sqlalchemy import SqlAlchemyConnector
 from astropy.time import Time
-from datetime import timedelta, strptime
+from datetime import timedelta
 
 # from prefect_sqlalchemy import ConnectionComponents, SyncDriver
 # connector = SqlAlchemyConnector(
