@@ -322,7 +322,7 @@ def sci_backend_processing(file: str):
         photometry = photometry_fits(scratch, identity, photometry_type)
         orbit = object_orbit(data["OBJECT"])
         # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
-        description["ISO-UTC-END"] = description["ISO-UTC-MID"] + timedelta(minutes=1)
+        description["ISO-UTC-END"] = (description["ISO-UTC-MID"]).string() + timedelta(minutes=1)
         ephemerides = object_ephemerides(description, orbit)
         if (calibration == None or photometry == None or orbit == None or
                 ephemerides == None):
