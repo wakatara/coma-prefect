@@ -318,14 +318,16 @@ def sci_backend_processing(file: str):
         pds4_lid = get_pds4_lid("coma-connector", identity)
         if pds4_lid == None:
             dead_letter(scratch)
+        else:
+            description['PDS4-LID'] = pds4_lid
         calibration = calibrate_fits(scratch)
         photometry_type = "APERTURE"
         photometry = photometry_fits(scratch, identity, photometry_type)
         orbit = object_orbit(identity)
         # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
-        iso_utc_mid = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
+        description["ISO-UTC-MID"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
-        iso_utc_end = iso_utc_mid + timedelta(minutes=1)
+        description["ISO-UTC-END"] = description["ISO-UTC-MID"] + timedelta(minutes=1)
         ephemerides = object_ephemerides(description, orbit)
         if (calibration == None or photometry == None or orbit == None or
                 ephemerides == None):
