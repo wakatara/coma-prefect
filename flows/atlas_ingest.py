@@ -156,7 +156,7 @@ def calibrate_fits(file: str) -> dict:
     return data
 
 @task(log_prints=True)
-def photometry_fits(file: str) -> dict:
+def photometry_fits(file: str, phot_type: str) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry"
     apertures = [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
     # else:
@@ -164,7 +164,8 @@ def photometry_fits(file: str) -> dict:
 
     json = { 
         "fits_file": file, 
-        "apertures": apertures 
+        "apertures": apertures,
+        "photometry_type": phot_type,
     }
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
@@ -208,8 +209,6 @@ def object_ephemerides(orbit: dict, obscode: str) -> dict:
     orbit = resp["result"]
     print(orbit)
     return orbit
-
-
 
 
 @task(log_prints=True)
@@ -302,7 +301,8 @@ def sci_backend_processing(file: str):
         if pds4_lid == None:
             dead_letter(scratch)
         calibration = calibrate_fits(scratch)
-        photometry = photometry_fits(scratch)
+        photometry_type = "APERTURE"
+        photometry = photometry_fits(scratch, photometry_type)
         orbit = object_orbit(data["OBJECT"])
         ephemerides = object_ephemerides(orbit, description["OBSCODE"])
         if (calibration == None or photometry == None or orbit == None or
