@@ -197,13 +197,13 @@ def object_orbit(object: str)-> dict:
 
 @task(log_prints=True)
 def object_ephemerides(description: dict) -> dict:
-    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides"
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem"
     json = {
         "object": description['OBJECT'],
         "dt_minutes": 2,
         "obscode": description["OBSCODE"],
         "iso_utc_mid": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
-        "iso_utc_end":description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+        "iso_utc_end": description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
     }
     print("This is the eph json:")
     print(json)
@@ -211,7 +211,7 @@ def object_ephemerides(description: dict) -> dict:
     job_id = response['id']
     print(f"The returned job for eph is {job_id}")
     time.sleep(30)
-    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephemerides/{job_id}".format(job_id=job_id)
+    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     ephemerides = resp["result"]
     print(ephemerides)
