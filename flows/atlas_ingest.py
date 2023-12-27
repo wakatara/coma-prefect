@@ -250,7 +250,7 @@ def move_to_datalake(scratch: str,data: dict):
     else:
         os.makedirs(path)
         shutil.move(scratch, path + filename)
-    success_msg = f"Moved ATLAS { data['SOURCE-FILEPATH'] } to datalake { path + filename } "
+    success_msg = f"Moved ATLAS { data['FITS-FILE'] } to datalake { path + filename } via scratch area."
     print(success_msg)
     return success_msg 
 
