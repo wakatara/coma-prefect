@@ -245,7 +245,11 @@ def move_to_datalake(scratch: str,data: dict):
     filename = os.path.basename(scratch)
     # Move file to directory path in datalake
     path = f"/data/staging/datalake/{ data['PDS4-LID'] }/{ data['ISO-DATE-LAKE'] }/{ data['INSTRUMENT'] }/"
-    shutil.move(scratch, path + filename)
+    if os.path.exists(path):
+        shutil.move(scratch, path + filename)
+    else:
+        os.makedirs(path)
+        shutil.move(scratch, path + filename)
     success_msg = f"Moved ATLAS { data['SOURCE-FILEPATH'] } to datalake { path + filename } "
     print(success_msg)
     return success_msg 
