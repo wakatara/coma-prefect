@@ -202,7 +202,7 @@ def object_ephemerides(description: dict) -> dict:
         "object": description['OBJECT'],
         "dt-minutes": 2,
         "obscode": description["OBSCODE"],
-        "utc-start": description["ISO-UTC-MID"].strftime('%Y-%m-%dT%H:%M:%S'),
+        "utc-start": description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S'),
         "utc-end": description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
     }
     print("This is the eph json:")
