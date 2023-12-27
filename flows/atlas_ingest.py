@@ -252,7 +252,7 @@ def move_to_datalake(scratch: str,data: dict):
 
 
 @task(log_prints=True)
-def database_inserts(image: dict, calibration: dict, photometry:dict, orbit: dict): 
+def database_inserts(image: dict, calibration: dict, photometry:dict, orbit: dict, orbit_coords: dict): 
     image_api = "http://coma.ifa.hawaii.edu:8001/api/v2/images"
     calibration_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
     photometry_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
@@ -342,17 +342,17 @@ def sci_backend_processing(file: str):
     calibration = calibrate_fits(scratch)
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
-    orbit = object_orbit(description)
+    orbit = object_orbit(description["OBJECT"])
     description["ISO-UTC-START"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
     description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
     ephemerides = object_ephemerides(description)
-    record_orbit = record_orbit(description)
+    orbit_coords = record_orbit(description["OBJECT"])
 
     if (calibration == None or photometry == None or orbit == None or
             ephemerides == None):
         dead_letter(scratch)
-    database_inserts(data, calibration, photometry, orbit)
+    database_inserts(data, calibration, photometry, orbit, orbit_coords)
     move_to_datalake(scratch, data)
 
 @flow(log_prints=True)
