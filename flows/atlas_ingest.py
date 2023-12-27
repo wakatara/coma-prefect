@@ -172,7 +172,7 @@ def photometry_fits(file: str, object: str, phot_type: str) -> dict:
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
     job_id = photom_resp["id"]
-    time.sleep(15)
+    time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry/{job_id}".format(job_id=job_id)
     photometry = httpx.get(japi, verify=False).json()
     print(f"Photometry result is { photometry }")
