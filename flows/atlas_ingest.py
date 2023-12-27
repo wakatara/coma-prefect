@@ -213,9 +213,31 @@ def object_ephemerides(description: dict) -> dict:
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    ephemerides = resp
+    ephemerides = resp["result"]
     print(ephemerides)
     return ephemerides
+
+
+@task(log_prints=True)
+def record_orbit(object: str) -> dict:
+    api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/coords"
+    json = {
+        "method": "JPL-ORBIT",
+        "object-name": object,
+        "rhelio_max": 30.0,
+        "dr_frac": 0.02
+    }
+    print("This is the coord json:")
+    print(json)
+    response = httpx.post(api, json=json, verify=False).json()
+    job_id = response['id']
+    print(f"The returned job for orbit coords is {job_id}")
+    time.sleep(30)
+    japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/coords/{job_id}".format(job_id=job_id)
+    resp = httpx.get(japi, verify=False).json()
+    orbit_coords = resp["result"]
+    print(orbit_coords)
+    return orbit_coords
 
 
 @task(log_prints=True)
@@ -303,31 +325,35 @@ def sci_backend_processing(file: str):
     description["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
     description["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
-    # identity = identify_object(description)
     filepath = os.path.normpath(file).split(os.path.sep)
     if filepath[-4] == "atlas":
         identity = packed_provisional_to_identity(filepath[-2])
         description['OBJECT'] = identity
-        data = flight_checks(description, scratch)
-        pds4_lid = get_pds4_lid("coma-connector", identity)
-        if pds4_lid == None:
-            dead_letter(scratch)
-        else:
-            description['PDS4-LID'] = pds4_lid
-        calibration = calibrate_fits(scratch)
-        photometry_type = "APERTURE"
-        photometry = photometry_fits(scratch, identity, photometry_type)
-        orbit = object_orbit(identity)
-        # iso_utc_mid = datetime.strptime(description["iso_date_mid"], '%Y-%m-%d %H:%M:%S.%f')
-        description["ISO-UTC-START"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
+    else:
+        identity = identify_object(description)
 
-        description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
-        ephemerides = object_ephemerides(description)
-        if (calibration == None or photometry == None or orbit == None or
-                ephemerides == None):
-            dead_letter(scratch)
-        database_inserts(data, calibration, photometry, orbit)
-        move_to_datalake(scratch, data)
+    data = flight_checks(description, scratch)
+    pds4_lid = get_pds4_lid("coma-connector", identity)
+    if pds4_lid == None:
+        dead_letter(scratch)
+    else:
+        description['PDS4-LID'] = pds4_lid
+    
+    calibration = calibrate_fits(scratch)
+    photometry_type = "APERTURE"
+    photometry = photometry_fits(scratch, identity, photometry_type)
+    orbit = object_orbit(description)
+    description["ISO-UTC-START"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
+
+    description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
+    ephemerides = object_ephemerides(description)
+    record_orbit = record_orbit(description)
+
+    if (calibration == None or photometry == None or orbit == None or
+            ephemerides == None):
+        dead_letter(scratch)
+    database_inserts(data, calibration, photometry, orbit)
+    move_to_datalake(scratch, data)
 
 @flow(log_prints=True)
 def dead_letter(file:str):
