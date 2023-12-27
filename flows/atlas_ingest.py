@@ -244,9 +244,9 @@ def record_orbit(object: str) -> dict:
 def move_to_datalake(scratch: str,data: dict):
     filename = os.path.basename(scratch)
     # Move file to directory path in datalake
-    path = f"/data/staging/datalake/{ data['pds4_lid'] }/{ data['iso_date_lake'] }/{ data['instrument'] }/"
+    path = f"/data/staging/datalake/{ data['PDS4-LID'] }/{ data['ISO-DATE-LAKE'] }/{ data['INSTRUMENT'] }/"
     shutil.move(scratch, path + filename)
-    success_msg = f"Moved ATLAS { data['source_filepath'] } to datalake { path + filename } "
+    success_msg = f"Moved ATLAS { data['SOURCE-FILEPATH'] } to datalake { path + filename } "
     print(success_msg)
     return success_msg 
 
