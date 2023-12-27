@@ -140,7 +140,7 @@ def get_pds4_lid(block_name: str, identity: str, ) -> str:
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
         print(f"Result returned by SQL was {row}")
-        return row
+        return row[0]
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
