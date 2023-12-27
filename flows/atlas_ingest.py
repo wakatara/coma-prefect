@@ -219,10 +219,10 @@ def object_ephemerides(description: dict) -> dict:
 
 
 @task(log_prints=True)
-def record_orbit(object: str) -> dict:
+def record_orbit(object: str, orbit:dict) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/coords"
     json = {
-        "method": "JPL-ORBIT",
+        "orbit": orbit,
         "object-name": object,
         "rhelio-max": 30.0,
         "dr-frac": 0.02
@@ -332,7 +332,7 @@ def sci_backend_processing(file: str):
     else:
         identity = identify_object(description)
 
-    data = flight_checks(description, scratch)
+    description = flight_checks(description, scratch)
     pds4_lid = get_pds4_lid("coma-connector", identity)
     if pds4_lid == None:
         dead_letter(scratch)
@@ -347,13 +347,13 @@ def sci_backend_processing(file: str):
 
     description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
     ephemerides = object_ephemerides(description)
-    orbit_coords = record_orbit(description["OBJECT"])
+    orbit_coords = record_orbit(description["OBJECT"], orbit)
 
     if (calibration == None or photometry == None or orbit == None or
             ephemerides == None):
         dead_letter(scratch)
-    database_inserts(data, calibration, photometry, orbit, orbit_coords)
-    move_to_datalake(scratch, data)
+    database_inserts(description, calibration, photometry, orbit, orbit_coords)
+    move_to_datalake(scratch, description)
 
 @flow(log_prints=True)
 def dead_letter(file:str):
