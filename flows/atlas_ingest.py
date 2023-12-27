@@ -322,7 +322,7 @@ def sci_backend_processing(file: str):
         description["ISO-UTC-MID"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
         description["ISO-UTC-END"] = description["ISO-UTC-MID"] + timedelta(minutes=1)
-        ephemerides = object_ephemerides(description, orbit)
+        ephemerides = object_ephemerides(description)
         if (calibration == None or photometry == None or orbit == None or
                 ephemerides == None):
             dead_letter(scratch)
