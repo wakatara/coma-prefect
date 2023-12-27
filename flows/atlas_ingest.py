@@ -224,8 +224,8 @@ def record_orbit(object: str) -> dict:
     json = {
         "method": "JPL-ORBIT",
         "object-name": object,
-        "rhelio_max": 30.0,
-        "dr_frac": 0.02
+        "rhelio-max": 30.0,
+        "dr-frac": 0.02
     }
     print("This is the coord json:")
     print(json)
