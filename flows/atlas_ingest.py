@@ -145,7 +145,7 @@ def get_pds4_lid(block_name: str, identity: str, ) -> str:
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/calibrate"
-    json = { "fist_file": file }
+    json = { "FITS-FILE": file }
     response = httpx.post(api, json=json,verify=False).json()
     job_id = response["id"]
     
@@ -164,10 +164,10 @@ def photometry_fits(file: str, object: str, phot_type: str) -> dict:
     #     apertures = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
 
     json = { 
-        "fits_file": file,
-        "object": object, 
-        "apertures": apertures,
-        "photometry_type": phot_type,
+        "FITS-FILE": file,
+        "OBJECT-NAME": object, 
+        "APERTURES": apertures,
+        "PHOTOMETRY-TYPE": phot_type,
     }
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
