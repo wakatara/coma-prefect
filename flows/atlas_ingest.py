@@ -140,12 +140,12 @@ def get_pds4_lid(block_name: str, identity: str, ) -> str:
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
         print(f"Result returned by SQL was {row}")
-        return row[0]
+        return row
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/calibrate"
-    json = { "FITS-FILE": file }
+    json = { "fits_file": file }
     response = httpx.post(api, json=json,verify=False).json()
     job_id = response["id"]
     
@@ -164,10 +164,10 @@ def photometry_fits(file: str, object: str, phot_type: str) -> dict:
     #     apertures = [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 16.0, 20.0]
 
     json = { 
-        "FITS-FILE": file,
-        "OBJECT-NAME": object, 
-        "APERTURES": apertures,
-        "PHOTOMETRY-TYPE": phot_type,
+        "fits_file": file,
+        "object_name": object, 
+        "apertures": apertures,
+        "photometry_type": phot_type,
     }
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
