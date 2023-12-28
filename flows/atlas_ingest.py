@@ -174,7 +174,7 @@ def photometry_fits(file: str, object: str, phot_type: str) -> dict:
 
     photom_resp = httpx.post(api, json=json, verify=False).json()
     job_id = photom_resp["id"]
-    time.sleep(30)
+    time.sleep(15)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry/{job_id}".format(job_id=job_id)
     photometry = httpx.get(japi, verify=False).json()
     print(f"Photometry result is { photometry }")
@@ -258,7 +258,7 @@ def move_to_datalake(scratch: str,data: dict):
 
 
 @task(log_prints=True)
-def database_inserts(image: dict, calibration: dict, photometry:dict, orbit: dict, orbit_coords: dict): 
+def database_inserts(description: dict, calibration: dict, photometry:dict, orbit: dict, orbit_coords: dict): 
     image_api = "http://coma.ifa.hawaii.edu:8001/api/v2/images"
     calibration_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
     photometry_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
