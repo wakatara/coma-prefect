@@ -372,10 +372,14 @@ def sci_backend_processing(file: str):
     description["TELESCOPE-ID"] = get_telescope("coma-connector", description["INSTRUMENT"])
     if description["TELESCOPE-ID"] == None:
         dead_letter(scratch)
+    else:
+        description["TELESCOPE-ID"] = description["TELESCOPE-ID"][0]
 
     description["FILTER-ID"] = get_filter("coma-connector", description["FILTER"], description["TELESCOPE-ID"])
     if description["FILTER-ID"] == None:
         dead_letter(scratch)
+    else:
+        description["FILTER-ID"] = description["FILTER-ID"][0]
 
     # description["PDS4-LID". description["TELESCOPE-ID"], description["FILTER"] = get_integrations("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
     # if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTER"] == None:
