@@ -136,18 +136,29 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         return data
 
 @task(log_prints=True)
-def db_lookups(block_name: str, identity: str, instrument: str, filter:str) -> tuple[str, str, str]:
-    print(f"The actual name of the object is {identity}")
-    print(f"The actual instrument is {instrument}")
-    print(f"The actual filter is {filter}")
+def get_pds4_lid(block_name: str, identity: str) -> str:
+    print("The actual name of the object is:")
+    print(identity)
     with SqlAlchemyConnector.load(block_name) as connector:
-        pds4_lid_row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
-        print(f"Result returned by SQL for identity was {pds4_lid_row[0]}")
-        telescope_id_row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
-        print(f"Result returned by SQL  for telescope_id was {telescope_id_row[0]}")
-        filter_id_row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id_row[0]})
-        print(f"Result returned by SQL for filter_id was {filter_id_row[0]}")
-        return pds4_lid_row[0], telescope_id_row[0], filter_id_row[0]
+        row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
+        print(f"Result returned by SQL for identity was {row[0]}")
+        return row
+
+@task(log_prints=True)
+def get_telescope(block_name: str, instrument: str) -> str:
+    print(f"The actual instrument is {instrument}")
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
+        print(f"Result returned by SQL was {row[0]}")
+        return row
+
+@task(log_prints=True)
+def get_filter(block_name: str, filter: str, telescope_id: str) -> str:
+    print(f"The actual filter is {filter} and telescope_id is {telescope_id}")
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id})
+        print(f"Result returned by SQL was {row[0]}")
+        return row
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
@@ -353,9 +364,21 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
-    description["PDS4-LID"]. description["TELESCOPE-ID"], description["FILTERi-ID"] = db_lookups("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
-    if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTERi-ID"] == None:
+    description["PDS4-LID"] = get_pds4_lid("coma-connector", identity)
+    if description["PDS4-LID"] == None:
         dead_letter(scratch)
+
+    description["TELESCOPE-ID"] = get_telescope("coma-connector", description["INSTRUMENT"])
+    if description["TELESCOPE-ID"] == None:
+        dead_letter(scratch)
+
+    description["FILTER-ID"] = get_filter("coma-connector", description["FILTER"], description["TELESCOPE-ID"])
+    if description["FILTER-ID"] == None:
+        dead_letter(scratch)
+
+    # description["PDS4-LID". description["TELESCOPE-ID"], description["FILTER"] = get_integrations("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
+    # if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTER"] == None:
+    #     dead_letter(scratch)
 
     calibration = calibrate_fits(scratch)
     photometry_type = "APERTURE"
