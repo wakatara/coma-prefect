@@ -136,7 +136,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         return data
 
 @task(log_prints=True)
-def get_object(block_name: str, identity: str) -> str:
+def get_object_id(block_name: str, identity: str) -> str:
     print("The actual name of the object is:")
     print(identity)
     with SqlAlchemyConnector.load(block_name) as connector:
@@ -145,16 +145,7 @@ def get_object(block_name: str, identity: str) -> str:
         return row
 
 @task(log_prints=True)
-def get_object(block_name: str, filter: str) -> str:
-    print("The actual name of the filter is:")
-    print(filter)
-    with SqlAlchemyConnector.load(block_name) as connector:
-        row = connector.fetch_one("SELECT id FROM filters WHERE name = :name LIMIT 1", parameters={"name": identity})
-        print(f"Result returned by SQL for identity was {row}")
-        return row
-
-@task(log_prints=True)
-def get_instrument(block_name: str, instrument: str) -> str:
+def get_instrument_id(block_name: str, instrument: str) -> str:
     print("The actual name of the instrument is:")
     print(instrument)
     with SqlAlchemyConnector.load(block_name) as connector:
@@ -172,7 +163,7 @@ def get_pds4_lid(block_name: str, identity: str) -> str:
         return row
 
 @task(log_prints=True)
-def get_telescope(block_name: str, instrument: str) -> str:
+def get_telescope_id(block_name: str, instrument: str) -> str:
     print(f"The actual instrument is {instrument}")
     instrument = instrument.lower()
     with SqlAlchemyConnector.load(block_name) as connector:
@@ -181,7 +172,7 @@ def get_telescope(block_name: str, instrument: str) -> str:
         return row
 
 @task(log_prints=True)
-def get_filter(block_name: str, filter: str, telescope_id: str) -> str:
+def get_filter_id(block_name: str, filter: str, telescope_id: str) -> str:
     print(f"The actual filter is {filter} and telescope_id is {telescope_id}")
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id})
@@ -395,19 +386,13 @@ def sci_backend_processing(file: str):
 
     description = flight_checks(description, scratch)
 
-    description["OBJECT-ID"] = get_object("coma-connector", description["OBJECT"])
+    description["OBJECT-ID"] = get_object_id("coma-connector", description["OBJECT"])
     if description["OBJECT-ID"] == None:
         dead_letter(scratch)
     else:
         description["OBJECT-ID"] = description["OBJECT-ID"][0]
-
-    description["FILTER-ID"] = get_object("coma-connector", description["FILTER"])
-    if description["FILTER-ID"] == None:
-        dead_letter(scratch)
-    else:
-        description["FILTER-ID"] = description["FILTER-ID"][0]
     
-    description["INSTRUMENT-ID"] = get_object("coma-connector", description["INSTRUMENT"])
+    description["INSTRUMENT-ID"] = get_instrument_id("coma-connector", description["INSTRUMENT"])
     if description["INSTRUMENT-ID"] == None:
         dead_letter(scratch)
     else:
@@ -417,13 +402,13 @@ def sci_backend_processing(file: str):
     if description["PDS4-LID"] == None:
         dead_letter(scratch)
 
-    description["TELESCOPE-ID"] = get_telescope("coma-connector", description["INSTRUMENT"])
+    description["TELESCOPE-ID"] = get_telescope_id("coma-connector", description["INSTRUMENT"])
     if description["TELESCOPE-ID"] == None:
         dead_letter(scratch)
     else:
         description["TELESCOPE-ID"] = description["TELESCOPE-ID"][0]
 
-    description["FILTER-ID"] = get_filter("coma-connector", description["FILTER"], description["TELESCOPE-ID"])
+    description["FILTER-ID"] = get_filter_id("coma-connector", description["FILTER"], description["TELESCOPE-ID"])
     if description["FILTER-ID"] == None:
         dead_letter(scratch)
     else:
