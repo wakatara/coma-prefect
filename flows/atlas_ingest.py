@@ -143,7 +143,7 @@ def db_lookups(block_name: str, identity: str, instrument: str, filter:str) -> t
     with SqlAlchemyConnector.load(block_name) as connector:
         pds4_lid_row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
         print(f"Result returned by SQL for identity was {pds4_lid_row[0]}")
-        telescope_id_row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameter={"instrument": instrument})
+        telescope_id_row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
         print(f"Result returned by SQL  for telescope_id was {telescope_id_row[0]}")
         filter_id_row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id_row[0]})
         print(f"Result returned by SQL for filter_id was {filter_id_row[0]}")
