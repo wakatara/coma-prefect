@@ -141,15 +141,16 @@ def get_pds4_lid(block_name: str, identity: str) -> str:
     print(identity)
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
-        print(f"Result returned by SQL for identity was {row[0]}")
+        print(f"Result returned by SQL for identity was {row}")
         return row
 
 @task(log_prints=True)
 def get_telescope(block_name: str, instrument: str) -> str:
     print(f"The actual instrument is {instrument}")
+    instrument = instrument.lower()
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
-        print(f"Result returned by SQL was {row[0]}")
+        print(f"Result returned by SQL was {row}")
         return row
 
 @task(log_prints=True)
@@ -157,7 +158,7 @@ def get_filter(block_name: str, filter: str, telescope_id: str) -> str:
     print(f"The actual filter is {filter} and telescope_id is {telescope_id}")
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id})
-        print(f"Result returned by SQL was {row[0]}")
+        print(f"Result returned by SQL was {row}")
         return row
 
 @task(log_prints=True)
