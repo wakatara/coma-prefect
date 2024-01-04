@@ -136,13 +136,18 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         return data
 
 @task(log_prints=True)
-def get_pds4_lid(block_name: str, identity: str) -> str:
-    print("The actual name of the object is:")
-    print(identity)
+def db_lookups(block_name: str, identity: str, instrument: str, filter:str) -> tuple[str, str, str]:
+    print(f"The actual name of the object is {identity}")
+    print(f"The actual instrument is {instrument}")
+    print(f"The actual filter is {filter}")
     with SqlAlchemyConnector.load(block_name) as connector:
-        row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
-        print(f"Result returned by SQL was {row[0]}")
-        return row[0]
+        pds4_lid_row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
+        print(f"Result returned by SQL for identity was {pds4_lid_row[0]}")
+        telescope_id_row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameter={"instrument": instrument})
+        print(f"Result returned by SQL  for telescope_id was {telescope_id_row[0]}")
+        filter_id_row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id_row[0]})
+        print(f"Result returned by SQL for filter_id was {filter_id_row[0]}")
+        return pds4_lid_row[0], telescope_id_row[0], filter_id_row[0]
 
 @task(log_prints=True)
 def calibrate_fits(file: str) -> dict:
@@ -260,9 +265,18 @@ def move_to_datalake(scratch: str,data: dict):
 @task(log_prints=True)
 def database_inserts(description: dict, calibration: dict, photometry:dict, orbit: dict, orbit_coords: dict): 
     image_api = "http://coma.ifa.hawaii.edu:8001/api/v2/images"
-    calibration_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
-    photometry_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
-    pass
+    cal_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
+    phot_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
+
+    with SqlAlchemyConnector.load(block_name) as connector:
+        
+
+
+        row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
+        print(f"Result returned by SQL was {row[0]}")
+        return row[0]
+
+
     # image_resp = httpx.post(image_api, json=json, verify=False).json()
     # 
     # calibration["image_id"]= image["id"]
@@ -339,12 +353,10 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
-    pds4_lid = get_pds4_lid("coma-connector", identity)
-    if pds4_lid == None:
+    description["PDS4-LID"]. description["TELESCOPE-ID"], description["FILTERi-ID"] = db_lookups("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
+    if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTERi-ID"] == None:
         dead_letter(scratch)
-    else:
-        description['PDS4-LID'] = pds4_lid
-    
+
     calibration = calibrate_fits(scratch)
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
