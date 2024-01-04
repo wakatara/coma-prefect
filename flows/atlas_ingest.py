@@ -136,6 +136,33 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         return data
 
 @task(log_prints=True)
+def get_object(block_name: str, identity: str) -> str:
+    print("The actual name of the object is:")
+    print(identity)
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT id FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
+        print(f"Result returned by SQL for identity was {row}")
+        return row
+
+@task(log_prints=True)
+def get_object(block_name: str, filter: str) -> str:
+    print("The actual name of the filter is:")
+    print(filter)
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT id FROM filters WHERE name = :name LIMIT 1", parameters={"name": identity})
+        print(f"Result returned by SQL for identity was {row}")
+        return row
+
+@task(log_prints=True)
+def get_instrument(block_name: str, instrument: str) -> str:
+    print("The actual name of the instrument is:")
+    print(instrument)
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
+        print(f"Result returned by SQL for instrument was {row}")
+        return row
+
+@task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str) -> str:
     print("The actual name of the object is:")
     print(identity)
@@ -280,16 +307,18 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     cal_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
     phot_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
 
-    with SqlAlchemyConnector.load(block_name) as connector:
-        
+    # with SqlAlchemyConnector.load(block_name) as connector:
+    #     row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
+    #     print(f"Result returned by SQL was {row[0]}")
+    #     return row[0]
 
 
-        row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
-        print(f"Result returned by SQL was {row[0]}")
-        return row[0]
+    image_json = {
 
+    }
 
-    # image_resp = httpx.post(image_api, json=json, verify=False).json()
+    image_resp = httpx.post(image_api, json=image_json, verify=False).json()
+
     # 
     # calibration["image_id"]= image["id"]
     # 
@@ -365,6 +394,25 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
+
+    description["OBJECT-ID"] = get_object("coma-connector", description["OBJECT"])
+    if description["OBJECT-ID"] == None:
+        dead_letter(scratch)
+    else:
+        description["OBJECT-ID"] = description["OBJECT-ID"][0]
+
+    description["FILTER-ID"] = get_object("coma-connector", description["FILTER"])
+    if description["FILTER-ID"] == None:
+        dead_letter(scratch)
+    else:
+        description["FILTER-ID"] = description["FILTER-ID"][0]
+    
+    description["INSTRUMENT-ID"] = get_object("coma-connector", description["INSTRUMENT"])
+    if description["INSTRUMENT-ID"] == None:
+        dead_letter(scratch)
+    else:
+        description["INSTRUMENT-ID"] = description["INSTRUMENT-ID"][0]
+
     description["PDS4-LID"] = get_pds4_lid("coma-connector", identity)
     if description["PDS4-LID"] == None:
         dead_letter(scratch)
@@ -380,6 +428,8 @@ def sci_backend_processing(file: str):
         dead_letter(scratch)
     else:
         description["FILTER-ID"] = description["FILTER-ID"][0]
+
+
 
     # description["PDS4-LID". description["TELESCOPE-ID"], description["FILTER"] = get_integrations("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
     # if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTER"] == None:
