@@ -303,12 +303,8 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     print(f"Result returned by SQL was {row[0]}")
     #     return row[0]
 
-
-    image_json = {
-
-    }
-
-    image_resp = httpx.post(image_api, json=image_json, verify=False).json()
+    image_resp = httpx.post(image_api, json=description, verify=False).json()
+    print(image_resp)
 
     # 
     # calibration["image_id"]= image["id"]
