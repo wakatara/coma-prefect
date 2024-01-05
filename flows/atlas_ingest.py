@@ -114,8 +114,8 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
-        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
-        data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
+        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms').strftime('%Y-%m-%dT%H:%M:%S')
+        data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date').strftime('%Y-%m-%dT%H:%M:%S')
 
     try:
         data["EXPTIME"]
@@ -239,8 +239,8 @@ def object_ephemerides(description: dict) -> dict:
         "object": description['OBJECT'],
         "dt-minutes": 2,
         "obscode": description["OBSCODE"],
-        "utc-start": description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S'),
-        "utc-end": description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+        "utc-start": description["ISO-UTC-START"],
+        "utc-end": description["ISO-UTC-END"]
     }
     print("This is the eph json:")
     print(json)
