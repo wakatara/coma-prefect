@@ -114,7 +114,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
-        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
+        data["ISO-DATE-MID"] =  time_from_mjd
         data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
     try:
@@ -383,9 +383,9 @@ def atlas_ingest():
 def sci_backend_processing(file: str):
     scratch = copy_to_scratch(file)
     description = describe_fits(file)
-    time_from_mjd = Time(description["MJD-MID"], format='mjd', scale='utc')
-    description["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
-    description["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
+    # time_from_mjd = Time(description["MJD-MID"], format='mjd', scale='utc')
+    # description["ISO-DATE-MID"] =  time_from_mjd
+    # description["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
     filepath = os.path.normpath(file).split(os.path.sep)
     if filepath[-4] == "atlas":
@@ -438,11 +438,13 @@ def sci_backend_processing(file: str):
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
     orbit = object_orbit(description["OBJECT"])
-    description["ISO-UTC-START"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
+    description["ISO-UTC-START"] = description["MJD-MID"]
 
     description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
     description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
     description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+    # convert ISO-UTC-START over to database insert json timestamp
+    description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
 
     ephemerides = object_ephemerides(description)
     orbit_coords = record_orbit(description["OBJECT"], orbit)
