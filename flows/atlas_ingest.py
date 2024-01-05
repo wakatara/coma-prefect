@@ -309,7 +309,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["filter_id"] = description["FILTER-ID"]
     image["instrument_id"] = description["INSTRUMENT-ID"]
     image["mjd_mid"] = description["MJD-MID"]
-    image["iso_date_mid"] = description["ISO-DATE-MID"]
+    image["iso_date_mid"] = description["ISO-DATE-MID"].strftime('%Y-%m-%dT%H:%M:%S')
     image["exposure_time"] = description["EXPTIME"]
     image["gain"] = calibration["QUALITIES-INFO"]["GAIN"]
     image["pixel_scale"] = calibration["QUALITIES-INFO"]["PIXEL-SCALE"]
