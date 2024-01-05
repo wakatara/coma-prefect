@@ -442,10 +442,10 @@ def sci_backend_processing(file: str):
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
     orbit = object_orbit(description["OBJECT"])
-
-    description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
+    
     description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
-    description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+    description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
+    # description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
 
     ephemerides = object_ephemerides(description)
     orbit_coords = record_orbit(description["OBJECT"], orbit)
