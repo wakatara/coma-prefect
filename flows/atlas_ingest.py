@@ -114,8 +114,8 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
-        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms').strftime('%Y-%m-%dT%H:%M:%S')
-        data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date').strftime('%Y-%m-%dT%H:%M:%S')
+        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='iso', subfmt='date_hms')
+        data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
     try:
         data["EXPTIME"]
@@ -425,6 +425,9 @@ def sci_backend_processing(file: str):
     description["ISO-UTC-START"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
     description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
+    description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
+    description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+
     ephemerides = object_ephemerides(description)
     orbit_coords = record_orbit(description["OBJECT"], orbit)
 
