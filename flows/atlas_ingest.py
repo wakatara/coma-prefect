@@ -304,10 +304,21 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     print(f"Result returned by SQL was {row[0]}")
     #     return row[0]
     print(description)
+    image = {}
+    image["object_id"] = description["OBJECT-ID"]
+    image["filter_id"] = description["FILTER-ID"]
+    image["instrument_id"] = description["INSTRUMENT-ID"]
+    image["mjd_mid"] = description["MJD-MID"]
+    image["iso_date_mid"] = description["ISO-DATE-MID"]
+    image["exposure_time"] = description["EXPOSURE-TIME"]
+    image["gain"] = calibration["GAIN"]
+    image["pixel_scale"] = calibration["PIXEL-SCALE"]
+    image["source_filepath"] = description["SOURCE-FILEPATH"]
+    image["lake_filepath"] = description["LAKE-FILEPATH"]
+    print(image)
 
-    image_resp = httpx.post(image_api, json=description, verify=False).json()
+    image_resp = httpx.post(image_api, json=image, verify=False).json()
     print(image_resp)
-
 
     # 
     # calibration["image_id"]= image["id"]
@@ -415,7 +426,9 @@ def sci_backend_processing(file: str):
     else:
         description["FILTER-ID"] = description["FILTER-ID"][0]
 
-
+    description["SOURCE-FILEPATH"] = description["FITS-FILE"]
+    path = f"/data/staging/datalake/{ description['PDS4-LID'] }/{ description['ISO-DATE-LAKE'] }/{ description['INSTRUMENT'] }/"
+    description["LAKE-FILEPATH"] = path
 
     # description["PDS4-LID". description["TELESCOPE-ID"], description["FILTER"] = get_integrations("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
     # if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTER"] == None:
