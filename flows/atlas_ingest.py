@@ -5,6 +5,8 @@ from prefect_sqlalchemy import SqlAlchemyConnector
 from astropy.time import Time
 from datetime import datetime, timedelta
 
+auth_header = {"Authorization": "Bearer bowg0k-qomq4P-8gazve-c0m3t5"}
+
 # from prefect_sqlalchemy import ConnectionComponents, SyncDriver
 # connector = SqlAlchemyConnector(
 #     connection_info=ConnectionComponents(
@@ -322,7 +324,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["lake_filepath"] = description["LAKE-FILEPATH"]
     print(image)
 
-    image_resp = httpx.post(image_api, json=image, verify=False).json()
+    image_resp = httpx.post(image_api, json=image, headers=auth_header, verify=False).json()
     print(image_resp)
     pass
 
