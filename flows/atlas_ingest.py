@@ -144,14 +144,15 @@ def get_object_id(block_name: str, identity: str) -> str:
         print(f"Result returned by SQL for identity was {row}")
         return row
 
-# @task(log_prints=True)
-# def get_instrument_id(block_name: str, instrument: str) -> str:
-#     print("The actual name of the instrument is:")
-#     print(instrument)
-#     with SqlAlchemyConnector.load(block_name) as connector:
-#         row = connector.fetch_one("SELECT id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
-#         print(f"Result returned by SQL for instrument was {row}")
-#         return row
+@task(log_prints=True)
+def get_instrument_id(block_name: str, instrument: str) -> str:
+    print("The actual name of the instrument is:")
+    print(instrument)
+    instrument = instrument.lower()
+    with SqlAlchemyConnector.load(block_name) as connector:
+        row = connector.fetch_one("SELECT id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
+        print(f"Result returned by SQL for instrument was {row}")
+        return row
 
 @task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str) -> str:
@@ -390,11 +391,11 @@ def sci_backend_processing(file: str):
     else:
         description["OBJECT-ID"] = description["OBJECT-ID"][0]
     
-    # description["INSTRUMENT-ID"] = get_instrument_id("coma-connector", description["INSTRUMENT"])
-    # if description["INSTRUMENT-ID"] == None:
-    #     dead_letter(scratch)
-    # else:
-    #     description["INSTRUMENT-ID"] = description["INSTRUMENT-ID"][0]
+    description["INSTRUMENT-ID"] = get_instrument_id("coma-connector", description["INSTRUMENT"])
+    if description["INSTRUMENT-ID"] == None:
+        dead_letter(scratch)
+    else:
+        description["INSTRUMENT-ID"] = description["INSTRUMENT-ID"][0]
 
     description["PDS4-LID"] = get_pds4_lid("coma-connector", identity)
     if description["PDS4-LID"] == None:
