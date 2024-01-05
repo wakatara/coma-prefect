@@ -114,7 +114,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
-        data["ISO-DATE-MID"] =  time_from_mjd
+        data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='isot')
         data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
 
     try:
@@ -309,7 +309,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["filter_id"] = description["FILTER-ID"]
     image["instrument_id"] = description["INSTRUMENT-ID"]
     image["mjd_mid"] = description["MJD-MID"]
-    image["iso_date_mid"] = datetime.strptime(description["ISO-DATE-MID"], '%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%dT%H:%M:%S')
+    image["iso_date_mid"] = description["ISO-DATE-MID"].strftime('%Y-%m-%dT%H:%M:%S%f')
     image["exposure_time"] = description["EXPTIME"]
     image["gain"] = calibration["QUALITIES-INFO"]["GAIN"]
     image["pixel_scale"] = calibration["QUALITIES-INFO"]["PIXEL-SCALE"]
@@ -395,6 +395,8 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
+    print("The ISO UTC date is:")
+    print(description["ISO-UTC-START"])
 
     description["OBJECT-ID"] = get_object_id("coma-connector", description["OBJECT"])
     if description["OBJECT-ID"] == None:
@@ -438,13 +440,10 @@ def sci_backend_processing(file: str):
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
     orbit = object_orbit(description["OBJECT"])
-    description["ISO-UTC-START"] = description["MJD-MID"]
 
     description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
     description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
     description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
-    # convert ISO-UTC-START over to database insert json timestamp
-    description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
 
     ephemerides = object_ephemerides(description)
     orbit_coords = record_orbit(description["OBJECT"], orbit)
