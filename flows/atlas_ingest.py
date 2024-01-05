@@ -115,7 +115,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
         data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='isot')
         data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
-        data["ISO-UTC-START"] = data["ISO-DATE-MID"].strftime('%Y-%m-%dT%H:%M:%S')
+        data["ISO-UTC-START"] = datetime.strptime(data['ISO-DATE-MID'], '%Y-%m-%d %H:%M:%S.%f')
 
     try:
         data["EXPTIME"]
@@ -395,7 +395,7 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
-    print("The ISO UTC date is:")
+    print("The ISO UTC START date is:")
     print(description["ISO-UTC-START"])
 
     description["OBJECT-ID"] = get_object_id("coma-connector", description["OBJECT"])
