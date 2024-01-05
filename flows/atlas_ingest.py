@@ -116,6 +116,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
         data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='isot')
         data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
         data["ISO-UTC-START"] = datetime.strptime(data['ISO-DATE-MID'], '%Y-%m-%dT%H:%M:%S.%f')
+        data["ISO-UTC-END"] = data["ISO-UTC-START"] + timedelta(minutes=1)
 
     try:
         data["EXPTIME"]
@@ -236,6 +237,10 @@ def object_orbit(object: str)-> dict:
 @task(log_prints=True)
 def object_ephemerides(description: dict) -> dict:
     api = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem"
+    
+    description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
+    description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
+
     json = {
         "object": description['OBJECT'],
         "dt-minutes": 2,
@@ -395,8 +400,6 @@ def sci_backend_processing(file: str):
         identity = identify_object(description)
 
     description = flight_checks(description, scratch)
-    print("The ISO UTC START date is:")
-    print(description["ISO-UTC-START"])
 
     description["OBJECT-ID"] = get_object_id("coma-connector", description["OBJECT"])
     if description["OBJECT-ID"] == None:
@@ -442,7 +445,7 @@ def sci_backend_processing(file: str):
     orbit = object_orbit(description["OBJECT"])
     
     # description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
-    description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
+    # description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
     # description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
 
     ephemerides = object_ephemerides(description)
