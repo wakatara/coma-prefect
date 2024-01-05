@@ -111,13 +111,11 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
 
     if data["MJD-MID"] == 0.0:
         data["ISO-DATE-MID"] = datetime(1, 1, 1)
-        data["ISO-DATE-MID"] = datetime(1,1,1)
     else:
         time_from_mjd = Time(data["MJD-MID"], format='mjd', scale='utc')
         data["ISO-DATE-MID"] =  time_from_mjd.to_value(format='isot')
         data["ISO-DATE-LAKE"] = time_from_mjd.to_value(format='iso', subfmt='date')
-        data["ISO-UTC-START"] = data["ISO-DATE-MID"]
-
+        data["ISO-UTC-START"] = data["ISO-DATE-MID"].strftime('%Y-%m-%dT%H:%M:%S')
 
     try:
         data["EXPTIME"]
