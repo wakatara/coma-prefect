@@ -302,9 +302,11 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
     #     print(f"Result returned by SQL was {row[0]}")
     #     return row[0]
+    print(description)
 
     image_resp = httpx.post(image_api, json=description, verify=False).json()
     print(image_resp)
+
 
     # 
     # calibration["image_id"]= image["id"]
