@@ -274,7 +274,7 @@ def object_ephemerides(description: dict) -> dict:
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    ephemerides = resp["result"]
+    ephemerides = resp["result"]["PARAMETERS"]["eph"]
     print(ephemerides)
     return ephemerides
 
@@ -317,7 +317,7 @@ def move_to_datalake(scratch: str,data: dict):
 
 
 @task(log_prints=True)
-def database_inserts(description: dict, calibration: dict, photometry:dict, orbit: dict, orbit_coords: dict): 
+def database_inserts(description: dict, calibration: dict, photometry:dict, ephemerides: dict, orbit_coords: dict): 
     image_api = "http://coma.ifa.hawaii.edu:8001/api/v2/images"
     cal_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
     phot_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
@@ -377,33 +377,30 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     cal["sky_backd_adu_arcsec_2"] = calibration["QUALITIES-INFO"]["SKY-BACKD-ADU-ARCSEC2"]
     cal["sky_backd_photons_arcsec_2"] = calibration["QUALITIES-INFO"]["SKY-BACKD-PHOTONS-ARCSEC2"]
     cal["sky_backd_mag_arcsec_2"] = calibration["QUALITIES-INFO"]["SKY-BACKD-MAG-ARCSEC2"]
+    
     cal_resp = httpx.post(cal_api, json=cal, headers=auth_header, verify=False).json()
     print(cal_resp)
 
-    pass
-
-    # 
-    # calibration["image_id"]= image["id"]
-    # 
-    # calibration_json = {"image_id": image["id"], "pixel_scale": image["pixel_scale"],
-    #     "wcs_nstars": calibraton["wcs_nstars"], "wcs_rmsfit": calibration["wcs_rmsfit"], 
-    #     "wcs_catalog": calibration["wcs_catalog"], "phot_nstars": phot_nstars, 
-    #     "phot_catalog": phot_catalog, 
-    #     "zp_mag": zp_mag, "zp_mag_err": zp_mag_err, 
-    #     "zp_inst_mag": zp_inst_mag, "zp_inst_mag_err": zp_inst_mag_err,
-    #     "psf_nobj": psf_nobj, "psf_fwhm_arcsec": psf_fwhm_arcsec, "psf_major_axis_arcsec": psf_major_axis_arcsec,    "psf_minor_axis_arcsec": psf_minor_axis_arcsec, "psf_pa_pix": psf_pa_pix, "psf_pa_world": psf_pa_world,
-    #     "limit_mag_5_sigma": limit_mag_5_sigma, "limit_mag_10_sigma": limit_mag_10_sigma,
-    #     "ndensity_mag_20": ndensity_mag_20, "ndensity_5_sigma": ndensity_5_sigma,
-    #     "sky_backd_adu_pix": sky_backd_adu_pix, "sky_backd_photons_pix": sky_backd_photons_pix,
-    #     "sky_backd_adu_arcsec2": sky_backd_adu_arcsec2, "sky_backd_photons_arcsec2": sky_backd_photons_arcsec2,
-    #     "sky_backd_mag_arcsec2": sky_backd_mag_arcsec2, "calibration_filepath": scratch_filepath
-    # }
-    #
-    # calibrate_resp = httpx.post(calibration_api, json=json, verify=False).json()
-    # 
-    # 
-    # 
-    # photometry_resp = httpx.post(photometry_api, json=json, verify=False).json()
+    for a in photometry["results"]:
+        phot = a
+        phot["calibration_id"] = cal_resp["ID"]
+        phot["image_id"] = cal["image_id"]
+        phot["object_id"] = image["object_id"]
+        phot["sunvect_x"] = ephemerides["sunvect"]["x"]
+        phot["sunvect_y"] = ephemerides["sunvect"]["y"]
+        phot["sunvect_z"] = ephemerides["sunvect"]["z"]
+        phot["heliocentric_au"] = ephemerides["r"]
+        phot["geocentric_au"] = ephemerides["delta"]
+        phot["phase_angle"] = ephemerides["sto"]
+        phot["true_anomaly"] = ephemerides["trueanom"]
+        phot["orbit_coords"] = orbit_coords
+        phot_resp = httpx.post(phot_api, json=phot, headers=auth_header, verify=False).json()
+        print(phot_resp)
+    
+    success_msg = f"DB image, calibration, and photometry records inserted for FITS { description['SOURCE-FILEPATH'] }."
+    print(success_msg)
+    return success_msg 
+    
 
 @task(log_prints=True)
 def packed_provisional_to_identity(packed_name: str) -> str:
@@ -492,26 +489,18 @@ def sci_backend_processing(file: str):
     path = f"/data/staging/datalake/{ description['PDS4-LID'] }/{ description['ISO-DATE-LAKE'] }/{ description['INSTRUMENT'] }/"
     description["LAKE-FILEPATH"] = path
 
-    # description["PDS4-LID". description["TELESCOPE-ID"], description["FILTER"] = get_integrations("coma-connector", identity, description["INSTRUMENT"], description["FILTER"])
-    # if description["PDS4-LID"]== None or description["TELESCOPE-ID"] == None or description["FILTER"] == None:
-    #     dead_letter(scratch)
-
     calibration = calibrate_fits(scratch)
     photometry_type = "APERTURE"
     photometry = photometry_fits(scratch, identity, photometry_type)
     orbit = object_orbit(description["OBJECT"])
     
-    # description["ISO-UTC-START"] = description["ISO-UTC-START"].strftime('%Y-%m-%dT%H:%M:%S')
-    # description["ISO-UTC-END"] = description["ISO-UTC-START"] + timedelta(minutes=1)
-    # description["ISO-UTC-END"] = description["ISO-UTC-END"].strftime('%Y-%m-%dT%H:%M:%S')
-
     ephemerides = object_ephemerides(description)
     orbit_coords = record_orbit(description["OBJECT"], orbit)
 
     if (calibration == None or photometry == None or orbit == None or
             ephemerides == None):
         dead_letter(scratch)
-    database_inserts(description, calibration, photometry, orbit, orbit_coords)
+    database_inserts(description, calibration, photometry, ephemerides, orbit_coords)
     move_to_datalake(scratch, description)
 
 @flow(log_prints=True)
