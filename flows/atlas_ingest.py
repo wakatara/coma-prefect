@@ -274,7 +274,7 @@ def object_ephemerides(description: dict) -> dict:
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    ephemerides = resp["result"]["PARAMETERS"]["eph"]
+    ephemerides = resp["result"]["PARAMETERS"]
     print(ephemerides)
     return ephemerides
 
@@ -389,10 +389,10 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
         phot["sunvect_x"] = ephemerides["sunvect"]["x"][0]
         phot["sunvect_y"] = ephemerides["sunvect"]["y"][0]
         phot["sunvect_z"] = ephemerides["sunvect"]["z"][0]
-        phot["heliocentric_au"] = ephemerides["r"]
-        phot["geocentric_au"] = ephemerides["delta"]
-        phot["phase_angle"] = ephemerides["sto"]
-        phot["true_anomaly"] = ephemerides["trueanom"]
+        phot["heliocentric_au"] = ephemerides["eph"]["r"][0]
+        phot["geocentric_au"] = ephemerides["eph"]["delta"][0]
+        phot["phase_angle"] = ephemerides["eph"]["sto"][0]
+        phot["true_anomaly"] = ephemerides["eph"]["trueanom"][0]
         phot["orbit_coords"] = orbit_coords
         phot_resp = httpx.post(phot_api, json=phot, headers=auth_header, verify=False).json()
         print(phot_resp)
