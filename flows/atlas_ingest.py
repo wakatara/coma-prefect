@@ -326,6 +326,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
     #     print(f"Result returned by SQL was {row[0]}")
     #     return row[0]
+    print("Returned description")
     print(description)
     image = {}
     image["object_id"] = description["OBJECT-ID"]
@@ -339,6 +340,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["pixel_scale"] = calibration["QUALITIES-INFO"]["PIXEL-SCALE"]
     image["source_filepath"] = description["SOURCE-FILEPATH"]
     image["lake_filepath"] = description["LAKE-FILEPATH"]
+    print("Image submitted")
     print(image)
 
     image_resp = httpx.post(image_api, json=image, headers=auth_header, verify=False).json()
