@@ -296,7 +296,7 @@ def record_orbit(object: str, orbit:dict) -> dict:
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/coords/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    orbit_coords = resp["result"]
+    orbit_coords = resp["result"]["PARAMETERS"]
     print(orbit_coords)
     return orbit_coords
 
@@ -381,7 +381,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
     cal_resp = httpx.post(cal_api, json=cal, headers=auth_header, verify=False).json()
     print(cal_resp)
 
-    for a in photometry["results"]:
+    for a in photometry["result"]:
         phot = a
         phot["calibration_id"] = cal_resp["ID"]
         phot["image_id"] = cal["image_id"]
