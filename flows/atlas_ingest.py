@@ -30,7 +30,7 @@ def file_checker(basepath: str) -> list:
     for path in glob.glob(full_path, recursive=True):
         if os.path.isfile(path):
             mod_time = datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %H:%M:%S")
-            print("Found File {path} last modified: {mod_time}".format(path=path, mod_time=mod_time))
+            # print("Found File {path} last modified: {mod_time}".format(path=path, mod_time=mod_time))
             new_files.append(path)   
     print("Files found:")
     print(len(new_files))
@@ -47,8 +47,8 @@ def describe_fits(file: str) -> dict:
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/describe/{job_id}"
     resp = httpx.get(japi, verify=False).json()
     data = resp["result"]
-    print("Describe result")
-    print(data)
+    # print("Describe result")
+    # print(data)
     return data
 
 @task(log_prints=True)
@@ -79,7 +79,7 @@ def identify_object(description: dict) -> str:
 
     japi = f"http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/identify/{id}"
     resp = httpx.get(japi, verify=False).json()
-    print(f"The result of the comet identity is { resp['result'] }")
+    # print(f"The result of the comet identity is { resp['result'] }")
     return resp['result']
 
 @task(log_prints=True)
@@ -156,8 +156,7 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
 
 @task(log_prints=True)
 def get_object_id(block_name: str, identity: str) -> str:
-    print("The actual name of the object is:")
-    print(identity)
+    print(f"The actual name of the object is: {identity}")
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT id FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
         print(f"Result returned by SQL for identity was {row}")
@@ -165,21 +164,21 @@ def get_object_id(block_name: str, identity: str) -> str:
 
 @task(log_prints=True)
 def get_instrument_id(block_name: str, instrument: str) -> str:
-    print("The actual name of the instrument is:")
-    print(instrument)
+    # print("The actual name of the instrument is:")
+    # print(instrument)
     instrument = instrument.lower()
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
-        print(f"Result returned by SQL for instrument was {row}")
+        # print(f"Result returned by SQL for instrument was {row}")
         return row
 
 @task(log_prints=True)
 def get_pds4_lid(block_name: str, identity: str) -> str:
-    print("The actual name of the object is:")
-    print(identity)
+    # print("The actual name of the object is:")
+    # print(identity)
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name LIMIT 1", parameters={"name": identity})
-        print(f"Result returned by SQL for identity was {row}")
+        print(f"Result returned by SQL for identity for pds4_lid was {row}")
         return row
 
 @task(log_prints=True)
@@ -188,7 +187,7 @@ def get_telescope_id(block_name: str, instrument: str) -> str:
     instrument = instrument.lower()
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT telescope_id FROM instruments WHERE name = :instrument LIMIT 1", parameters={"instrument": instrument})
-        print(f"Result returned by SQL was {row}")
+        # print(f"Result returned by SQL was {row}")
         return row
 
 @task(log_prints=True)
@@ -196,7 +195,7 @@ def get_filter_id(block_name: str, filter: str, telescope_id: str) -> str:
     print(f"The actual filter is {filter} and telescope_id is {telescope_id}")
     with SqlAlchemyConnector.load(block_name) as connector:
         row = connector.fetch_one("SELECT id FROM filters WHERE input_code = :filter AND telescope_id = :telescope_id LIMIT 1", parameters={"filter": filter, "telescope_id": telescope_id})
-        print(f"Result returned by SQL was {row}")
+        # print(f"Result returned by SQL was {row}")
         return row
 
 @task(log_prints=True)
@@ -210,7 +209,7 @@ def calibrate_fits(file: str) -> dict:
     time.sleep(5)
     resp = httpx.get(japi, verify=False).json()
     data = resp["result"]
-    print(f"Calibrate result on file is {data}")
+    # print(f"Calibrate result on file is {data}")
     return data
 
 @task(log_prints=True)
@@ -232,7 +231,7 @@ def photometry_fits(file: str, object: str, phot_type: str) -> dict:
     time.sleep(15)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/fits/photometry/{job_id}".format(job_id=job_id)
     photometry = httpx.get(japi, verify=False).json()
-    print(f"Photometry result is { photometry }")
+    # print(f"Photometry result is { photometry }")
     return photometry
 
 @task(log_prints=True)
@@ -247,9 +246,9 @@ def object_orbit(object: str)-> dict:
     time.sleep(5)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/orbit/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
-    print(resp)
+    # print(resp)
     orbit = resp["result"]["ORBIT"]
-    print(orbit)
+    # print(orbit)
     return orbit
 
 @task(log_prints=True)
@@ -266,16 +265,16 @@ def object_ephemerides(description: dict) -> dict:
         "utc-start": description["ISO-UTC-START"],
         "utc-end": description["ISO-UTC-END"]
     }
-    print("This is the eph json:")
-    print(json)
+    # print("This is the eph json:")
+    # print(json)
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
-    print(f"The returned job for eph is {job_id}")
+    # print(f"The returned job for eph is {job_id}")
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/ephem/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     ephemerides = resp["result"]["PARAMETERS"]
-    print(ephemerides)
+    # print(ephemerides)
     return ephemerides
 
 
@@ -288,16 +287,16 @@ def record_orbit(object: str, orbit:dict) -> dict:
         "rhelio-max": 30.0,
         "dr-frac": 0.02
     }
-    print("This is the coord json:")
-    print(json)
+    # print("This is the coord json:")
+    # print(json)
     response = httpx.post(api, json=json, verify=False).json()
     job_id = response['id']
-    print(f"The returned job for orbit coords is {job_id}")
+    # print(f"The returned job for orbit coords is {job_id}")
     time.sleep(30)
     japi = "http://coma.ifa.hawaii.edu:8001/api/v2/sci/comet/coords/{job_id}".format(job_id=job_id)
     resp = httpx.get(japi, verify=False).json()
     orbit_coords = resp["result"]["PARAMETERS"]
-    print(orbit_coords)
+    # print(orbit_coords)
     return orbit_coords
 
 
@@ -322,12 +321,6 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
     cal_api = "http://coma.ifa.hawaii.edu:8001/api/v2/calibrations"
     phot_api = "http://coma.ifa.hawaii.edu:8001/api/v2/photometries"
 
-    # with SqlAlchemyConnector.load(block_name) as connector:
-    #     row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
-    #     print(f"Result returned by SQL was {row[0]}")
-    #     return row[0]
-    # print("Returned description")
-    # print(description)
     print(f"Inserting image record for {description['SOURCE-FILEPATH']}")
     image = {}
     image["object_id"] = description["OBJECT-ID"]
@@ -379,8 +372,9 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
     cal["sky_backd_mag_arcsec_2"] = calibration["QUALITIES-INFO"]["SKY-BACKD-MAG-ARCSEC2"]
     
     cal_resp = httpx.post(cal_api, json=cal, headers=auth_header, verify=False).json()
-    print(cal_resp)
+    # print(cal_resp)
 
+    print(f"Inserting photometry records for { photometry['result'][0]['photometry_type'] } for { description["SOURCE-FILEPATH"] }")
     for a in photometry["result"]:
         phot = a
         phot["calibration_id"] = cal_resp["calibration"]["ID"]
@@ -393,7 +387,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
         phot["geocentric_au"] = ephemerides["eph"]["delta"][0]
         phot["phase_angle"] = ephemerides["eph"]["sto"][0]
         phot["true_anomaly"] = ephemerides["eph"]["trueanom"][0]
-        phot["orbit_coords"] = orbit_coords
+        phot["orbit_coords"] = { "orbit": orbit_coords }
         phot_resp = httpx.post(phot_api, json=phot, headers=auth_header, verify=False).json()
         print(phot_resp)
     
