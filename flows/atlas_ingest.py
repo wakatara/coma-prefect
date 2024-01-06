@@ -131,8 +131,24 @@ def flight_checks(data: dict, scratch_filepath: str) -> dict:
     except:
         print("No filter present - setting to no_filter.") 
         data["FILTER"] = "no_filter"
+
+    match data["OBSTYPE"]:
+        case "OBJECT":
+            if data["IS-REDUCED"] == True:
+                data["OBSTYPE"] = "reduced"
+            else:
+                data["OBSTYPE"] = "raw"
+        case "BIAS":
+            data["OBSTYPE"] = "bias"
+        case "DARK":
+            data["OBSTYPE"] = "dark"
+        case "FLAT":
+            data["OBSTYPE"] = "flat"
+        case _:
+            data["OBSTYPE"] = "no_type"
     
-    if data["INSTRUMENT"] == "no_instrument" or data["OBSERVATORY"] == "no_observatory" or data["MJD-MID"] == 0.0 or data["EXPTIME"] == 0.0 or data["FILTER"] == "no_filter":
+    
+    if data["INSTRUMENT"] == "no_instrument" or data["OBSERVATORY"] == "no_observatory" or data["MJD-MID"] == 0.0 or data["EXPTIME"] == 0.0 or data["FILTER"] == "no_filter" or data["OBSTYPE"] == "no_type":
         dead_letter(scratch_filepath)
         return Failed()
     else: 
@@ -315,6 +331,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["object_id"] = description["OBJECT-ID"]
     image["filter_id"] = description["FILTER-ID"]
     image["instrument_id"] = description["INSTRUMENT-ID"]
+    image["type"] = description["OBSTYPE"]
     image["mjd_mid"] = description["MJD-MID"]
     image["iso_date_mid"] = datetime.strptime(description['ISO-DATE-MID'], '%Y-%m-%dT%H:%M:%S.%f').strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     image["exposure_time"] = description["EXPTIME"]
