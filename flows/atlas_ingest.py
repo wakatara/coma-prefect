@@ -326,8 +326,9 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     row = connector.fetch_one("SELECT pds4_lid FROM objects WHERE name = :name", parameters={"name": identity})
     #     print(f"Result returned by SQL was {row[0]}")
     #     return row[0]
-    print("Returned description")
-    print(description)
+    # print("Returned description")
+    # print(description)
+    print(f"Inserting image record for {description["SOURCE-FILEPATH"]}")
     image = {}
     image["object_id"] = description["OBJECT-ID"]
     image["filter_id"] = description["FILTER-ID"]
@@ -340,11 +341,45 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image["pixel_scale"] = calibration["QUALITIES-INFO"]["PIXEL-SCALE"]
     image["source_filepath"] = description["SOURCE-FILEPATH"]
     image["lake_filepath"] = description["LAKE-FILEPATH"]
-    print("Image submitted")
-    print(image)
-
+    # print("Image submitted")
+    # print(image)
     image_resp = httpx.post(image_api, json=image, headers=auth_header, verify=False).json()
-    print(image_resp)
+    # print(image_resp)
+   
+    print(f"Inserting calibration record for {description["SOURCE-FILEPATH"]}")
+    cal = {}
+    cal["image_id"] = image_resp["image"]["ID"]
+    cal["pixel_scale"] = calibration["PIXEL-SCALE"]
+    cal["wcs_n_stars"] = calibration["WCS-NSTARS"]
+    cal["wcs_rmsfit"] = calibration["WCS-RMSFIT"]
+    cal["wcs_catalog"] = calibration["WCS-CATALOG"]
+    cal["phot_n_stars"] = calibration["PHOT-NSTARS"]
+    cal["phot_catalog"] = calibration["PHOT-CATALOG"]
+    # cal["extinction"]
+    # cal["extinction_err"]
+    # cal["color_term"]
+    # cal["color_term_err"]
+    cal["zp_mag"] = calibration["ZPMAG"]
+    cal["zp_mag_err"] = calibration["ZPMAGERR"]
+    cal["zp_inst_mag"] = calibration["ZPINSTMAG"]
+    cal["zp_inst_mag_err"] = calibration["ZPINSTMAGERR"]
+    cal["psf_n_obj"] = calibration["PSF-NOBJ"]
+    cal["psf_fwhm_arcsec"] = calibration["PSF-FWHM-ARCSEC"]
+    cal["psf_major_axis_arcsec"] = calibration["PSF-MAJOR-AXIS-ARCSEC"]
+    cal["psf_minor_axis_arcsec"] = calibration["PSF-MINOR-AXIS-ARCSEC"]
+    cal["psf_pa_pix"] = calibration["PSF-PA-PIX"]
+    cal["limit_mag_5_sigma"] = calibration["MAG-5-SIGMA"]
+    cal["limit_mag_10_sigma"] = calibration["MAG-10-SIGMA"]
+    cal["n_density_mag_20"] = calibration["NDENSITY-MAG-20"]
+    cal["n_density_5_sigma"] = calibration["NDENSITY-5-SIGMA"]
+    cal["sky_backd_adu_pix"] = calibration["SKY-BACKD-ADU-PIX"]
+    cal["sky_backd_photons_pix"] = calibration["SKY-BACKD-PHOTONS-PIX"]
+    cal["sky_backd_adu_arcsec_2"] = calibration["SKY-BACKD-ADU-ARCSEC2"]
+    cal["sky_backd_photons_arcsec_2"] = calibration["SKY-BACKD-PHOTONS-ARCSEC2"]
+    cal["sky_backd_mag_arcsec_2"] = calibration["SKY-BACKD-MAG-ARCSEC2"]
+    cal_resp = httpx.post(cal_api, json=cal, headers=auth_header, verify=False).json()
+    print(cal_resp)
+
     pass
 
     # 
