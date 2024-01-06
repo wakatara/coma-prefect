@@ -328,7 +328,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     #     return row[0]
     # print("Returned description")
     # print(description)
-    print(f"Inserting image record for {description["SOURCE-FILEPATH"]}")
+    print(f"Inserting image record for {description['SOURCE-FILEPATH']}")
     image = {}
     image["object_id"] = description["OBJECT-ID"]
     image["filter_id"] = description["FILTER-ID"]
@@ -346,7 +346,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, orbi
     image_resp = httpx.post(image_api, json=image, headers=auth_header, verify=False).json()
     # print(image_resp)
    
-    print(f"Inserting calibration record for {description["SOURCE-FILEPATH"]}")
+    print(f"Inserting calibration record for {description['SOURCE-FILEPATH']}")
     cal = {}
     cal["image_id"] = image_resp["image"]["ID"]
     cal["pixel_scale"] = calibration["PIXEL-SCALE"]
