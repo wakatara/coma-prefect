@@ -374,7 +374,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
     cal_resp = httpx.post(cal_api, json=cal, headers=auth_header, verify=False).json()
     # print(cal_resp)
 
-    print(f"Inserting photometry records for { photometry['result'][0]['photometry_type'] } for { description["SOURCE-FILEPATH"] }")
+    print(f"Inserting photometry records for { photometry['result'][0]['photometry_type'] } for { description['SOURCE-FILEPATH'] }")
     for a in photometry["result"]:
         phot = a
         phot["calibration_id"] = cal_resp["calibration"]["ID"]
