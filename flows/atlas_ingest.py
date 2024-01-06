@@ -383,7 +383,7 @@ def database_inserts(description: dict, calibration: dict, photometry:dict, ephe
 
     for a in photometry["result"]:
         phot = a
-        phot["calibration_id"] = cal_resp["ID"]
+        phot["calibration_id"] = cal_resp["calibration"]["ID"]
         phot["image_id"] = cal["image_id"]
         phot["object_id"] = image["object_id"]
         phot["sunvect_x"] = ephemerides["sunvect"]["x"]
